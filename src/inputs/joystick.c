@@ -19,7 +19,7 @@
 
 static void JOYSTICK_DebugEvent(joystick_t *js);
 
-int JOYSTICK_Init(joystick_t *js, unsigned char debug, char *dev)
+int JOYSTICK_Init(joystick_t *js, unsigned char debug, const char *dev)
 {
     js->debug = debug;
 
@@ -52,7 +52,7 @@ int JOYSTICK_ReadEvent(joystick_t *js)
 
     if (bytes != sizeof(js->event))
     {
-        fprintf(stderr, "ERROR: Unexpected bytes from joystick:%d\n", bytes);
+        fprintf(stderr, "ERROR: Unexpected bytes from joystick: %d\n", bytes);
         return -1;
     }
 

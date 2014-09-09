@@ -13,8 +13,11 @@
 typedef enum _debug_types
 {
 	debugMain,
-	debugRemote,
+	debugConfig,
+    debugInputs,
 	debugJoystick,
+    debugRemote,
+    debugTcpClient,
 	debugNone
 } debug_types_e;
 
