@@ -28,7 +28,7 @@ int CONFIG_Init(char *configFile, int debug)
         return -1;
     }
 
-    DEBUG_Print(TRUE, debugConfig,"Config loaded from '%s'.\n",
+    DEBUG_Print(TRUE, debugConfig,"Config loaded from '%s'.",
             configFile);
     if(debug)
     {

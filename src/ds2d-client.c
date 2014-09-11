@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include "inputs.h"
+#include "remote.h"
 
 volatile unsigned int run = 1;
 
@@ -61,6 +62,10 @@ int main(int argc, char *argv[])
     }
 
     if(INPUTS_Init(configuration.inputs.joystick) != 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    if(REMOTE_Init() != 0)
     {
         exit(EXIT_FAILURE);
     }
