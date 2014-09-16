@@ -8,6 +8,8 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
+#include <stdbool.h>
+
 #define OPTIONS_SOFTWARE_MAJOR          (0)
 #define OPTIONS_SOFTWARE_MINOR          (1)
 #define OPTIONS_SOFTWARE_MAINTENANCE    (1)
@@ -23,12 +25,12 @@
 
 typedef struct _options
 {
-    int debug;
-    int debugConfig;
-    int debugInputs;
-    int debugJoystick;
-    int debugRemote;
-    int debugTcpClient;
+    bool debug;
+    bool debugConfig;
+    bool debugInputs;
+    bool debugJoystick;
+    bool debugRemote;
+    bool debugTcpClient;
 } options_t;
 
 options_t options;

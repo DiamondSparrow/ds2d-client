@@ -12,13 +12,13 @@
 
 typedef enum _debug_types
 {
-	debugMain,
-	debugConfig,
+    debugMain,
+    debugConfig,
     debugInputs,
-	debugJoystick,
+    debugJoystick,
     debugRemote,
     debugTcpClient,
-	debugNone
+    debugNone
 } debug_types_e;
 
 void DEBUG_Print(int debugFlag, debug_types_e debugType, void *str, ...);

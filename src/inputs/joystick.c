@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <linux/joystick.h>
 
 #include "joystick.h"
@@ -45,15 +46,19 @@ int JOYSTICK_ReadEvent(joystick_t *js)
     int bytes = 0;
 
     bytes = read(js->stream, &js->event, sizeof(js->event));
-    if ( bytes == -1)
+    if (bytes == -1)
     {
+        if(errno == ENODEV)
+        {
+            return -1;
+        }
         return 0;
     }
 
     if (bytes != sizeof(js->event))
     {
         fprintf(stderr, "ERROR: Unexpected bytes from joystick: %d\n", bytes);
-        return -1;
+        return -2;
     }
 
     JOYSTICK_DebugEvent(js);

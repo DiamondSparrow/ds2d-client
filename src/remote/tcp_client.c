@@ -29,20 +29,35 @@ int TCP_CLIENT_Init(tcp_client_t *tcpClient, char *ip, int port, int debug)
 
     tcpClient->debug = debug;
 
-    if ((tcpClient->stream = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    if ((tcpClient->stream = socket(PF_INET, SOCK_STREAM, 0)) == -1)
     {
         fprintf(stderr, "ERROR: Failed to create socket. %s.\n", strerror(errno));
         return -1;
     }
 
-
-    if ((setsockopt(tcpClient->stream, SOL_SOCKET, SO_REUSEADDR, (int *) 1, sizeof(int)) == -1)
-            // || (setsockopt(tcpClient->stream, SOL_SOCKET, SO_KEEPALIVE, (char*)pInt, sizeof(int)) == -1 )
-            || (setsockopt(tcpClient->stream, SOL_SOCKET, SO_RCVTIMEO, (char *) &tv_recv, sizeof(struct timeval)) == -1)
-            || (setsockopt(tcpClient->stream, SOL_SOCKET, SO_SNDTIMEO, (char *) &tv_send, sizeof(struct timeval)) == -1))
+    /*
+    if (setsockopt(tcpClient->stream, SOL_SOCKET, SO_REUSEADDR, (int *) 1, sizeof(int)) == -1)
     {
-        fprintf(stderr,"ERROR: Failed to set socket options. %s.\n", strerror(errno));
+        fprintf(stderr,"ERROR: Failed to set socket option SO_REUSEADDR. %s.\n", strerror(errno));
         return -2;
+    }
+    */
+    /*
+    if(setsockopt(tcpClient->stream, SOL_SOCKET, SO_KEEPALIVE, (char *)1, sizeof(int)) == -1)
+    {
+        fprintf(stderr,"ERROR: Failed to set socket option SO_KEEPALIVE. %s.\n", strerror(errno));
+        return -3;
+    }
+    */
+    if(setsockopt(tcpClient->stream, SOL_SOCKET, SO_RCVTIMEO, (char *) &tv_recv, sizeof(struct timeval)) == -1)
+    {
+        fprintf(stderr,"ERROR: Failed to set socket option SO_RCVTIMEO. %s.\n", strerror(errno));
+        return -4;
+    }
+    if(setsockopt(tcpClient->stream, SOL_SOCKET, SO_SNDTIMEO, (char *) &tv_send, sizeof(struct timeval)) == -1)
+    {
+        fprintf(stderr,"ERROR: Failed to set socket option SO_SNDTIMEO. %s.\n", strerror(errno));
+        return -5;
     }
 
     tcpClient->myAddr.sin_family = AF_INET;
@@ -50,7 +65,6 @@ int TCP_CLIENT_Init(tcp_client_t *tcpClient, char *ip, int port, int debug)
 
     memset(&(tcpClient->myAddr.sin_zero), 0, 8);
     tcpClient->myAddr.sin_addr.s_addr = inet_addr(ip);
-
 
     return 0;
 }

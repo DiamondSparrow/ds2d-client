@@ -8,9 +8,11 @@
 #ifndef TCP_CLIENT_H_
 #define TCP_CLIENT_H_
 
+#include <netinet/in.h>
+
 #define TCP_CLIENT_SEND_SEC     5
 #define TCP_CLIENT_SEND_USEC    0
-#define TCP_CLIENT_RECV_SEC     15
+#define TCP_CLIENT_RECV_SEC     5
 #define TCP_CLIENT_RECV_USEC    0
 
 typedef struct _tcp_client

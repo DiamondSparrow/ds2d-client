@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <getopt.h>
 
@@ -30,12 +31,12 @@ void OPTIONS_Init(options_t *options, int argc, char *argv[])
     { NULL, no_argument, NULL, 0 }
     };
 
-    options->debug = FALSE;
-    options->debugConfig = FALSE;
-    options->debugInputs = FALSE;
-    options->debugJoystick = FALSE;
-    options->debugRemote = FALSE;
-    options->debugTcpClient = FALSE;
+    options->debug = false;
+    options->debugConfig = false;
+    options->debugInputs = false;
+    options->debugJoystick = false;
+    options->debugRemote = false;
+    options->debugTcpClient = false;
 
     do
     {
@@ -43,27 +44,27 @@ void OPTIONS_Init(options_t *options, int argc, char *argv[])
         switch (nextOption)
         {
         case 'd':
-            options->debug = TRUE;
+            options->debug = true;
             break;
         case 'c':
-            options->debugConfig = TRUE;
-            options->debug = TRUE;
+            options->debugConfig = true;
+            options->debug = true;
             break;
         case 'i':
-            options->debugInputs = TRUE;
-            options->debug = TRUE;
+            options->debugInputs = true;
+            options->debug = true;
             break;
         case 'j':
-            options->debugJoystick = TRUE;
-            options->debug = TRUE;
+            options->debugJoystick = true;
+            options->debug = true;
             break;
         case 'r':
-            options->debugRemote = TRUE;
-            options->debug = TRUE;
+            options->debugRemote = true;
+            options->debug = true;
             break;
         case 't':
-            options->debugTcpClient = TRUE;
-            options->debug = TRUE;
+            options->debugTcpClient = true;
+            options->debug = true;
             break;
 
         case 'V':
