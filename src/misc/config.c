@@ -11,7 +11,7 @@
 
 #include "config.h"
 #include "ini.h"
-#include "debug.h"
+#include "display.h"
 #include "types.h"
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
@@ -24,12 +24,11 @@ int CONFIG_Init(char *configFile, int debug)
 {
     if (ini_parse(configFile, CONFIG_Handler, &configuration) < 0)
     {
-        fprintf(stderr, "ERROR: Can't load '%s'\n", configFile);
+        DISPLAY_Debug(TRUE, displayDebugError, "Can't load config file '%s'\n", configFile);
         return -1;
     }
 
-    DEBUG_Print(TRUE, debugConfig,"Config loaded from '%s'.",
-            configFile);
+    DISPLAY_Debug(debug, displayDebugConfig, "Config loaded from '%s'.", configFile);
     if(debug)
     {
         CONFIG_Debug();
@@ -40,11 +39,12 @@ int CONFIG_Init(char *configFile, int debug)
 
 void CONFIG_Debug(void)
 {
-    DEBUG_Print(TRUE, debugConfig, "Remote - ip = %s, port = %d;",
+    DISPLAY_Debug(TRUE, displayDebugConfig, "Remote - ip = %s, port = %d;",
             configuration.remote.ip,
             configuration.remote.port);
-    DEBUG_Print(TRUE, debugConfig, "Inputs - joystick = %s;",
-            configuration.inputs.joystick);
+    DISPLAY_Debug(TRUE, displayDebugConfig, "Inputs - joystick = %s, offset = %d;",
+            configuration.inputs.joystick,
+            configuration.inputs.offset);
 
     return;
 }
@@ -63,6 +63,10 @@ static int CONFIG_Handler(void *config, const char *section, const char *name, c
     else if (MATCH("inputs", "joystick"))
     {
         pConfig->inputs.joystick = strdup(value);
+    }
+    else if (MATCH("inputs", "offset"))
+    {
+        pConfig->inputs.offset = atoi(value);
     }
     else
     {

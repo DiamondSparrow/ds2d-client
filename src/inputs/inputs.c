@@ -16,11 +16,11 @@
 
 #include "inputs.h"
 #include "joystick.h"
-
+#include "ds2.h"
 #include "options.h"
 #include "sleep.h"
 #include "types.h"
-#include "debug.h"
+#include "display.h"
 #include "config.h"
 
 
@@ -37,7 +37,7 @@ int INPUTS_Init(const char *device)
     INPUTS_Run = true;
     if( (ret = pthread_create(&INPUTS_Thread, NULL, &INPUTS_Handler, NULL)) )
     {
-        fprintf(stderr,"ERROR: Failed to create inputs thread (%d). %s.\n", ret, strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError,"Failed to create inputs thread (%d). %s.\n", ret, strerror(errno));
         return -1;
     }
 
@@ -66,7 +66,7 @@ void *INPUTS_Handler()
 
     pthread_setname_np(INPUTS_Thread, "ds2c-inputs");
 
-    DEBUG_Print(options.debugInputs, debugInputs, "* started.");
+    DISPLAY_Debug(options.debugInputs, displayDebugInputs, "* started.");
     SLEEP_Delay(1.0);
 
     while (INPUTS_Run)
@@ -89,7 +89,8 @@ void *INPUTS_Handler()
             else
             {
                 connected = true;
-                DEBUG_Print(options.debugInputs, debugInputs, "joystick connected.");
+                DISPLAY_Debug(options.debugInputs, displayDebugInputs, "joystick connected.");
+                ds2_data.joystickState = true;
             }
         }
         else
@@ -98,28 +99,95 @@ void *INPUTS_Handler()
             switch (ret)
             {
             case 0:
-                SLEEP_Delay(0.1);
+                SLEEP_Delay(0.01);
                 break;
             case -1:
                 JOYSTICK_Close(&js);
                 connected = false;
-                DEBUG_Print(options.debugInputs, debugInputs, "joystick disconnected.");
+                DISPLAY_Debug(options.debugInputs, displayDebugInputs, "joystick disconnected.");
                 break;
             case 1:
-                if (js.event.type == JS_EVENT_AXIS
-                        && (js.event.number == 1 || js.event.number == 0))
+                if (js.event.type == JS_EVENT_AXIS)
                 {
-                    if (js.event.number == 1)
+                    switch(js.event.number)
                     {
-                        jseY = (float) js.event.value / -10.2396875;
+                    case 0:
+                    case 1:
+                        if(js.event.value < configuration.inputs.offset && js.event.value > -(configuration.inputs.offset))
+                        {
+                            js.event.value = 0;
+                        }
+                        if(js.event.value > configuration.inputs.offset)
+                        {
+                            js.event.value -= configuration.inputs.offset;
+                        }
+                        else if(js.event.value < -(configuration.inputs.offset))
+                        {
+                            js.event.value += configuration.inputs.offset;
+                        }
+
+                        if (js.event.number == 1)
+                        {
+                            jseY = (float) (js.event.value - 0) / ((JOYSTICK_AXIS_MIN + configuration.inputs.offset) / 100);
+                        }
+                        if (js.event.number == 0)
+                        {
+                            jseX = (float) (js.event.value - 0) / ((JOYSTICK_AXIS_MAX - configuration.inputs.offset) / 100);
+                        }
+                        INPUTS_GetVector(jseX, jseY, &vector, &angle);
+                        ds2_data.speed = (int)vector;
+                        ds2_data.angle = (int)angle;
+                        DISPLAY_Debug(options.debugInputs, displayDebugInputs, "Vector: %+05.0f; Angle: %+05.0f;", vector, angle);
+                        break;
+                    case 2:
+                        ds2_data.brake = ((js.event.value + 32767) / 655.34);
+                        break;
+                    case 6:
+                        if(js.event.value < 0)
+                        {
+                            if((ds2_data.pan + 5) <= 90)
+                            {
+                                ds2_data.pan += 5;
+                            }
+                        }
+                        else if(js.event.value > 0)
+                        {
+                            if((ds2_data.pan - 5) >= -90)
+                            {
+                                ds2_data.pan -= 5;
+                            }
+                        }
+                        break;
+                    case 7:
+                        if(js.event.value < 0)
+                        {
+                            if((ds2_data.tilt + 5) <= 90)
+                            {
+                                ds2_data.tilt += 5;
+                            }
+                        }
+                        else if(js.event.value > 0)
+                        {
+                            if((ds2_data.tilt - 5) >= -90)
+                            {
+                                ds2_data.tilt -= 5;
+                            }
+                        }
+                        break;
                     }
-                    if (js.event.number == 0)
+                }
+                if(js.event.type == JS_EVENT_BUTTON)
+                {
+                    switch(js.event.number)
                     {
-                        jseX = (float) js.event.value / 10.2396875;
+                    case 2:
+                        if(js.event.value == 1)
+                        {
+                            ds2_data.speed = 0;
+                            ds2_data.angle = 0;
+                        }
+                        break;
                     }
-                    INPUTS_GetVector(jseX, jseY, &vector, &angle);
-                    DEBUG_Print(options.debugInputs, debugInputs,
-                            "Vector: %+05.0f; Angle: %+05.0f;", vector, angle);
                 }
                 break;
             default:
@@ -134,7 +202,7 @@ void *INPUTS_Handler()
         JOYSTICK_Close(&js);
     }
 
-    DEBUG_Print(options.debugInputs, debugInputs, "x stopped.");
+    DISPLAY_Debug(options.debugInputs, displayDebugInputs, "x stopped.");
 
     return (NULL);
 }
@@ -142,9 +210,9 @@ void *INPUTS_Handler()
 static void INPUTS_GetVector(short x, short y, double *velocity, double *angle)
 {
     *velocity = sqrt(pow(x, 2) + pow(y, 2));
-    if (*velocity > 3200)
+    if (*velocity > 100)
     {
-        *velocity = 3200;
+        *velocity = 100;
     }
 
     *angle = atan2(y, x);

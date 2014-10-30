@@ -17,6 +17,7 @@ typedef struct _config_remote
 typedef struct _config_inputs
 {
     const char* joystick;
+    int offset;
 } config_inputs_t;
 
 typedef struct _config

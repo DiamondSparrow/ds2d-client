@@ -13,7 +13,6 @@
 #include <signal.h>
 #include <math.h>
 
-#include "daemonize.h"
 #include "options.h"
 #include "sleep.h"
 #include "types.h"
@@ -22,6 +21,8 @@
 
 #include "inputs.h"
 #include "remote.h"
+#include "display.h"
+#include "ds2.h"
 
 volatile unsigned int run = 1;
 
@@ -31,30 +32,11 @@ int main(int argc, char *argv[])
 {
     OPTIONS_Init(&options, argc, argv);
 
-    if (!options.debug)
-    {
-        DAEMONIZE_Init();
-    }
-    else
-    {
-        printf("\033[2J\033[1;1H\033[37m");
-        printf("\033[1;20H .-'/ ,_  \'-.   ");
-        printf("\033[2;20H/  (  ( >  )  \\ ");
-        printf("\033[3;20H\\   '-' '-'   / ");
-        printf("\033[4;20H'-..__ __..-'    ");
-        printf("\033[5;20H      /_\\       ");
-        printf("\033[0m");
-        printf("\n\t%s %d.%d.%d.%d (%s)\n\n",
-        OPTIONS_SOFTWARE_NAME,
-        OPTIONS_SOFTWARE_MAJOR,
-        OPTIONS_SOFTWARE_MINOR,
-        OPTIONS_SOFTWARE_MAINTENANCE,
-        OPTIONS_SOFTWARE_BUILD,
-        OPTIONS_SOFTWARE_EDITION);
-    }
 
     signal(SIGINT, terminate);
     signal(SIGTERM, terminate);
+
+    DISPLAY_Init();
 
     if(CONFIG_Init("../config.ini", options.debugConfig) != 0)
     {
@@ -65,6 +47,7 @@ int main(int argc, char *argv[])
     {
         exit(EXIT_FAILURE);
     }
+
     if(REMOTE_Init() != 0)
     {
         exit(EXIT_FAILURE);
@@ -72,20 +55,17 @@ int main(int argc, char *argv[])
 
     SLEEP_Delay(0.1);
 
-    DEBUG_Print(options.debug, debugMain, "# Running.");
+    DISPLAY_Debug(options.debug, displayDebugMain, "# Running.");
 
     while (run)
     {
+        DISPLAY_Show();
         SLEEP_Delay(0.1);
     }
 
     INPUTS_Close();
     REMOTE_Close();
-
-    if (!options.debug)
-    {
-        DAEMONIZE_Close();
-    }
+    DISPLAY_Close();
 
     return EXIT_SUCCESS;
 }
@@ -96,7 +76,7 @@ void terminate(int signalNumber)
     {
         printf("\n");
     }
-    DEBUG_Print(options.debug, debugMain, "Terminate.");
+    DISPLAY_Debug(options.debug, displayDebugMain, "Terminate.");
     run = 0;
 
     return;

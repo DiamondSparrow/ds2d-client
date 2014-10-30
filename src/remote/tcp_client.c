@@ -16,6 +16,8 @@
 #include <sys/types.h>
 
 #include "tcp_client.h"
+#include "display.h"
+#include "types.h"
 
 int TCP_CLIENT_Init(tcp_client_t *tcpClient, char *ip, int port, int debug)
 {
@@ -31,32 +33,32 @@ int TCP_CLIENT_Init(tcp_client_t *tcpClient, char *ip, int port, int debug)
 
     if ((tcpClient->stream = socket(PF_INET, SOCK_STREAM, 0)) == -1)
     {
-        fprintf(stderr, "ERROR: Failed to create socket. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed to create socket. %s.\n", strerror(errno));
         return -1;
     }
 
     /*
     if (setsockopt(tcpClient->stream, SOL_SOCKET, SO_REUSEADDR, (int *) 1, sizeof(int)) == -1)
     {
-        fprintf(stderr,"ERROR: Failed to set socket option SO_REUSEADDR. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed to set socket option SO_REUSEADDR. %s.\n", strerror(errno));
         return -2;
     }
     */
     /*
     if(setsockopt(tcpClient->stream, SOL_SOCKET, SO_KEEPALIVE, (char *)1, sizeof(int)) == -1)
     {
-        fprintf(stderr,"ERROR: Failed to set socket option SO_KEEPALIVE. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed to set socket option SO_KEEPALIVE. %s.\n", strerror(errno));
         return -3;
     }
     */
     if(setsockopt(tcpClient->stream, SOL_SOCKET, SO_RCVTIMEO, (char *) &tv_recv, sizeof(struct timeval)) == -1)
     {
-        fprintf(stderr,"ERROR: Failed to set socket option SO_RCVTIMEO. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed to set socket option SO_RCVTIMEO. %s.\n", strerror(errno));
         return -4;
     }
     if(setsockopt(tcpClient->stream, SOL_SOCKET, SO_SNDTIMEO, (char *) &tv_send, sizeof(struct timeval)) == -1)
     {
-        fprintf(stderr,"ERROR: Failed to set socket option SO_SNDTIMEO. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed to set socket option SO_SNDTIMEO. %s.\n", strerror(errno));
         return -5;
     }
 
@@ -73,7 +75,7 @@ int TCP_CLIENT_Connect(tcp_client_t *tcpClient)
 {
     if (connect(tcpClient->stream, (struct sockaddr*) &tcpClient->myAddr, sizeof(tcpClient->myAddr)) == -1)
     {
-        fprintf(stderr,"ERROR: Failed to connect to socket. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed connect to socket. %s.\n", strerror(errno));
         return -1;
     }
 
@@ -93,7 +95,7 @@ int TCP_CLIENT_Send(tcp_client_t *tcpClient, char *data, int dataLength)
 
     if( (ret = send(tcpClient->stream, data, dataLength, 0)) != dataLength)
     {
-        fprintf(stderr,"ERROR: Failed to send data to socket. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed to send data to socket. %s.\n", strerror(errno));
         return -1;
     }
 
@@ -104,9 +106,9 @@ int TCP_CLIENT_Receive(tcp_client_t *tcpClient, char *data, int dataLength)
 {
     int ret = -1;
 
-    if( (ret = recv(tcpClient->stream, data, dataLength, 0)) != dataLength)
+    if( (ret = recv(tcpClient->stream, data, dataLength, 0)) < 1)
     {
-        fprintf(stderr,"ERROR: Failed to receive data from socket. %s.\n", strerror(errno));
+        DISPLAY_Debug(TRUE, displayDebugError, "Failed to receive data from socket. %s.\n", strerror(errno));
         return -1;
     }
 

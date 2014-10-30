@@ -20,6 +20,7 @@ pthread_mutex_t DEBUG_Mutex = PTHREAD_MUTEX_INITIALIZER;
 const char DEBUG_TypeNames[debugNone + 1][11] =
 {
         "main",
+        "ERROR",
         "config",
         "inputs",
         "joystick",
@@ -41,7 +42,8 @@ void DEBUG_Print(int debugFlag, debug_types_e debugType, void *str, ...)
     {
         pthread_mutex_lock(&DEBUG_Mutex);
 #if DEBUG_USE_HEADER
-        fprintf(stderr, "[%ld.%06ld] ds2c-%-11.11s: ",
+        fprintf(debugType == debugError ? stderr : stdout,
+                "[%ld.%06ld] %-11.11s: ",
                 //(localTime.tv_sec*1000LL + localTime.tv_usec/1000),
                 localTime.tv_sec,
                 localTime.tv_usec,

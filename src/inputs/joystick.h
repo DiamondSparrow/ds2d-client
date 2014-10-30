@@ -10,6 +10,9 @@
 
 #include <linux/joystick.h>
 
+#define JOYSTICK_AXIS_MAX    32767
+#define JOYSTICK_AXIS_MIN   -32767
+
 typedef struct _joystick
 {
     int stream;
