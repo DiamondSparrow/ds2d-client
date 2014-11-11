@@ -47,12 +47,12 @@ int main(int argc, char *argv[])
     {
         exit(EXIT_FAILURE);
     }
-
+/*
     if(REMOTE_Init() != 0)
     {
         exit(EXIT_FAILURE);
     }
-
+*/
     SLEEP_Delay(0.1);
 
     DISPLAY_Debug(options.debug, displayDebugMain, "# Running.");

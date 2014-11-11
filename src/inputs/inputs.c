@@ -61,8 +61,12 @@ void *INPUTS_Handler()
     int ret = 0;
     double vector = 0;
     double angle = 0;
-    double jseX = 0;
-    double jseY = 0;
+    double jseLeftX = 0;
+    double jseLeftY = 0;
+    double jseRightX = 0;
+    double jseRightY = 0;
+    int fixLeftAxis = 0;
+    int fixRightAxis = 0;
 
     pthread_setname_np(INPUTS_Thread, "ds2c-inputs");
 
@@ -76,6 +80,8 @@ void *INPUTS_Handler()
             if(JOYSTICK_Init(&js, options.debugJoystick, configuration.inputs.joystick) != 0)
             {
                 connected = false;
+                fixLeftAxis = false;
+                fixRightAxis = false;
                 i = 10;
                 while(INPUTS_Run)
                 {
@@ -113,34 +119,73 @@ void *INPUTS_Handler()
                     {
                     case 0:
                     case 1:
-                        if(js.event.value < configuration.inputs.offset && js.event.value > -(configuration.inputs.offset))
+                        if(fixLeftAxis)
                         {
-                            js.event.value = 0;
-                        }
-                        if(js.event.value > configuration.inputs.offset)
-                        {
-                            js.event.value -= configuration.inputs.offset;
-                        }
-                        else if(js.event.value < -(configuration.inputs.offset))
-                        {
-                            js.event.value += configuration.inputs.offset;
-                        }
+                            if(js.event.value < configuration.inputs.offset && js.event.value > -(configuration.inputs.offset))
+                            {
+                                js.event.value = 0;
+                            }
+                            if(js.event.value > configuration.inputs.offset)
+                            {
+                                js.event.value -= configuration.inputs.offset;
+                            }
+                            else if(js.event.value < -(configuration.inputs.offset))
+                            {
+                                js.event.value += configuration.inputs.offset;
+                            }
 
-                        if (js.event.number == 1)
-                        {
-                            jseY = (float) (js.event.value - 0) / ((JOYSTICK_AXIS_MIN + configuration.inputs.offset) / 100);
+                            if (js.event.number == 1)
+                            {
+                                jseLeftY = (double) (js.event.value - 0) / ((JOYSTICK_AXIS_MIN + configuration.inputs.offset) / 100);
+                            }
+                            if (js.event.number == 0)
+                            {
+                                jseLeftX = (double) (js.event.value - 0) / ((JOYSTICK_AXIS_MAX - configuration.inputs.offset) / 100);
+                            }
+                            INPUTS_GetVector(jseLeftX, jseLeftY, &vector, &angle);
+                            ds2_data.speed = (int)vector;
+                            ds2_data.angle = (int)angle;
+                            DISPLAY_Debug(options.debugInputs, displayDebugInputs, "Vector: %+05.0f; Angle: %+05.0f;", vector, angle);
                         }
-                        if (js.event.number == 0)
-                        {
-                            jseX = (float) (js.event.value - 0) / ((JOYSTICK_AXIS_MAX - configuration.inputs.offset) / 100);
-                        }
-                        INPUTS_GetVector(jseX, jseY, &vector, &angle);
-                        ds2_data.speed = (int)vector;
-                        ds2_data.angle = (int)angle;
-                        DISPLAY_Debug(options.debugInputs, displayDebugInputs, "Vector: %+05.0f; Angle: %+05.0f;", vector, angle);
                         break;
                     case 2:
                         ds2_data.brake = ((js.event.value + 32767) / 655.34);
+                        ds2_data.speed = 0;
+                        ds2_data.angle = 0;
+                        break;
+                    case 3:
+                    case 4:
+                        if(fixRightAxis)
+                        {
+                            if(js.event.value < configuration.inputs.offset && js.event.value > -(configuration.inputs.offset))
+                            {
+                                js.event.value = 0;
+                            }
+                            if(js.event.value > configuration.inputs.offset)
+                            {
+                                js.event.value -= configuration.inputs.offset;
+                            }
+                            if(js.event.value < -configuration.inputs.offset)
+                            {
+                                js.event.value += configuration.inputs.offset;
+                            }
+                            if (js.event.number == 3)
+                            {
+                                jseRightY = (double) (js.event.value - 0) / ((JOYSTICK_AXIS_MIN + configuration.inputs.offset) / -90);
+                                if ((int)jseRightY >= -90.0 && (int)jseRightY <= 90.0)
+                                {
+                                    ds2_data.pan = (int)jseRightY;
+                                }
+                            }
+                            if (js.event.number == 4)
+                            {
+                                jseRightX = (double) (js.event.value - 0) / ((JOYSTICK_AXIS_MAX - configuration.inputs.offset) / -90);
+                                if ((int)jseRightX >= -90 && (int)jseRightX <= 90.0)
+                                {
+                                    ds2_data.tilt = (int)jseRightX;
+                                }
+                            }
+                        }
                         break;
                     case 6:
                         if(js.event.value < 0)
@@ -187,6 +232,18 @@ void *INPUTS_Handler()
                             ds2_data.angle = 0;
                         }
                         break;
+                    case 9:
+                        if (js.event.value == 1)
+                        {
+                            fixLeftAxis = !fixLeftAxis;
+                        }
+                        break;
+                    case 10:
+                        if (js.event.value == 1)
+                        {
+                            fixRightAxis = !fixRightAxis;
+                        }
+                        break;
                     }
                 }
                 break;
@@ -215,7 +272,7 @@ static void INPUTS_GetVector(short x, short y, double *velocity, double *angle)
         *velocity = 100;
     }
 
-    *angle = atan2(y, x);
+    *angle = atan2(x, y);
     if (angle < 0)
     {
         *angle += 2 * M_PI;
