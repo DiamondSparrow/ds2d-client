@@ -108,7 +108,11 @@ int TCP_CLIENT_Receive(tcp_client_t *tcpClient, char *data, int dataLength)
 
     if( (ret = recv(tcpClient->stream, data, dataLength, 0)) < 1)
     {
-        DISPLAY_Debug(TRUE, displayDebugError, "Failed to receive data from socket. %s.\n", strerror(errno));
+        if(errno == ECONNRESET)
+        {
+            DISPLAY_Debug(TRUE, displayDebugError, "Failed to receive data from socket (%d). %s.\n", errno, strerror(errno));
+            return -2;
+        }
         return -1;
     }
 

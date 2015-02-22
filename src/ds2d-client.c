@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
 {
     OPTIONS_Init(&options, argc, argv);
 
-
     signal(SIGINT, terminate);
     signal(SIGTERM, terminate);
 
@@ -47,20 +46,20 @@ int main(int argc, char *argv[])
     {
         exit(EXIT_FAILURE);
     }
-/*
+
     if(REMOTE_Init() != 0)
     {
         exit(EXIT_FAILURE);
     }
-*/
-    SLEEP_Delay(0.1);
+
+    SLEEP_Delay(1.1);
 
     DISPLAY_Debug(options.debug, displayDebugMain, "# Running.");
 
     while (run)
     {
         DISPLAY_Show();
-        SLEEP_Delay(0.1);
+        SLEEP_Delay(0.01);
     }
 
     INPUTS_Close();

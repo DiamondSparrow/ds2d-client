@@ -62,6 +62,7 @@ void *REMOTE_Handler()
 {
     bool connected = false;
     int i = 0;
+    int ret = 0;
     char data[128] = {0};
 
     pthread_setname_np(REMOTE_Thread, "ds2c-remote");
@@ -76,9 +77,9 @@ void *REMOTE_Handler()
         {
             if(TCP_CLIENT_Connect(&tcpClient) == 0)
             {
-                connected = true;
-                DISPLAY_Debug(options.debugRemote, displayDebugRemote, "connected.");
+                connected            = true;
                 ds2_data.remoteState = true;
+                DISPLAY_Debug(options.debugRemote, displayDebugRemote, "connected.");
             }
             else
             {
@@ -96,17 +97,47 @@ void *REMOTE_Handler()
         else
         {
             sprintf(data, "5:%d,%d,%d,%d,%d;", ds2_data.speed, ds2_data.angle, ds2_data.brake, ds2_data.pan, ds2_data.tilt);
-            TCP_CLIENT_Send(&tcpClient, data, strlen(data));
-            SLEEP_Delay(0.005);
-            if (TCP_CLIENT_Receive(&tcpClient, data, 128) > 0)
+            if(TCP_CLIENT_Send(&tcpClient, data, strlen(data)) == -1)
             {
-                sscanf(data, "6:%d,%d,%d,%d,%d,%d;",
-                        &ds2_data.left.speed, &ds2_data.left.current, &ds2_data.left.brake,
-                        &ds2_data.right.speed, &ds2_data.right.current, &ds2_data.right.brake);
+                connected            = false;
+                ds2_data.remoteState = false;
+                DISPLAY_Debug(options.debugRemote, displayDebugRemote, "disconnected.");
+                TCP_CLIENT_Close(&tcpClient);
+                if(TCP_CLIENT_Init(&tcpClient, (char *)configuration.remote.ip, configuration.remote.port, options.debugTcpClient) != 0)
+                {
+                    return (NULL);
+                }
+                break;
             }
-            SLEEP_Delay(0.005);
+            else
+            {
+                SLEEP_Delay(0.005);
+                if ((ret = TCP_CLIENT_Receive(&tcpClient, data, 128)) > 0)
+                {
+                    sscanf(data, "6:%d,%d,%d,%d,%d,%d;",
+                            &ds2_data.left.speed, &ds2_data.left.current, &ds2_data.left.brake,
+                            &ds2_data.right.speed, &ds2_data.right.current, &ds2_data.right.brake);
+                }
+                else
+                {
+                    if(ret == -2)
+                    {
+                        connected            = false;
+                        ds2_data.remoteState = false;
+                        DISPLAY_Debug(options.debugRemote, displayDebugRemote, "disconnected.");
+                        TCP_CLIENT_Close(&tcpClient);
+                        if(TCP_CLIENT_Init(&tcpClient, (char *)configuration.remote.ip, configuration.remote.port, options.debugTcpClient) != 0)
+                        {
+                            return (NULL);
+                        }
+                    }
+                }
+                SLEEP_Delay(0.005);
+            }
         }
     }
+
+    TCP_CLIENT_Close(&tcpClient);
 
     DISPLAY_Debug(options.debugRemote, displayDebugRemote, "x stopped.");
 
